@@ -1,23 +1,19 @@
 from requests import get
 from urllib import quote_plus
 from bs4 import BeautifulSoup as bs
+from csv import DictWriter as dw
 
 root_url = 'http://lyrics.wikia.com/'
 band_filename = 'RSTOP100'
 
-genre_to_lyrics = {}
+visited = {}
 
+with open(band_filename, 'r') as band_file, open('db.csv', 'w+') as csv_file:
+    writer = dw(csv_file, fieldnames=['genre', 'band', 'song', 'lyrics'])
+    writer.writeheader()
 
-def serialize_lyrics(g2l):
-    for genre, lyrics in g2l.iteritems():
-        with open("./db/{0}".format(genre.replace(' ', '_')), 'w+') as f:
-            for lyric in lyrics:
-                f.write(lyric.encode('utf8') + '\n')
-
-with open(band_filename, 'r') as f:
-    for line in f:
-        band, genres = line.partition(' - ')[::2]
-        genres = genres.split(',')
+    for line in band_file:
+        band, genre = line.partition(' - ')[::2]
 
         safe_band = band.replace(' ', '_')
         safe_band = quote_plus(safe_band)
@@ -41,6 +37,11 @@ with open(band_filename, 'r') as f:
                 continue
 
             url = '{0}{1}'.format(root_url, lyric_link['href'])
+            if url in visited:
+                print 'skipping duplicate: ', url
+                continue
+            visited[url] = 1
+
             print 'Getting lyrics for: ', url
             r = get(url)
             if r.status_code != 200:
@@ -50,11 +51,13 @@ with open(band_filename, 'r') as f:
             lyricbox = bs(r.text, 'html.parser').select('.lyricbox')
             if len(lyricbox) != 1:
                 continue
-            for lyric in lyricbox[0].stripped_strings:
-                for genre in genres:
-                    if genre.strip() not in genre_to_lyrics:
-                        genre_to_lyrics[genre.strip()] = []
-                    genre_to_lyrics[genre.strip()].append(lyric)
-        #break
-print 'Serializing Lyrics Database'
-serialize_lyrics(genre_to_lyrics)
+
+            clean_lyrics = '\n'.join(lyricbox[0].stripped_strings)
+
+            writer.writerow({
+                'genre': genre.strip().encode('utf-8'),
+                'band': band.strip().encode('utf-8'),
+                'song': url.encode('utf-8'),
+                'lyrics': clean_lyrics.encode('utf-8')
+                })
+        exit()
