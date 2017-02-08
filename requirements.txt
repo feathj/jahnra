@@ -1,0 +1,8 @@
+numpy
+Flask
+scipy
+nltk
+scikit-learn
+unicodecsv
+requests
+beautifulsoup4
