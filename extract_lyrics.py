@@ -60,4 +60,3 @@ with open(band_filename, 'r') as band_file, open('db.csv', 'w+') as csv_file:
                 'song': url.encode('utf-8'),
                 'lyrics': clean_lyrics.encode('utf-8')
                 })
-        exit()
