@@ -1,0 +1,28 @@
+<html>
+  <body>
+    <div>
+      <h2>Predict genre: <span id="prediction"></span></h2>
+      <textarea id="lyrics" rows="25" cols="80">
+      </textarea>
+      <button id="try">try</button>
+    </div>
+    <script language="javaScript">
+      document.getElementById('try').onclick = function() {
+        var request = {
+          lyrics: document.getElementById('lyrics').value
+        };
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText);
+            document.getElementById('prediction').textContent = response.prediction;
+          }
+        };
+        xhr.open("POST", '/predict_genre', true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify(request));
+      }
+    </script>
+  </body>
+</html>
